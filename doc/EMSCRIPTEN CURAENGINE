@@ -1,0 +1,82 @@
+#emcc : drop in replacement for gcc
+
+
+#if used directly on main.cpp 
+#dependency resolving issue : ./utils/intpoint.h:11:10: fatal error: 'clipper/clipper.hpp' file not found
+
+#need to compile clipper first (see depency resolution for emscrimpten projects) 
+~/Dev/tools/emscripten/emcc clipper/clipper.cpp -o clipper.js
+
+######
+#DOH ' following the original makefile for CuraEngine:
+emcc main.cpp modelFile/modelFile.cpp clipper/clipper.cpp -I. -o Cura_SteamEngine.js
+
+#issues with consts normally defined in linux headers 
+./utils/intpoint.h:218:11: error: use of undeclared identifier 'LLONG_MIN'
+    : min(LLONG_MIN, LLONG_MIN), max(LLONG_MIN, LLONG_MIN)
+          ^
+./utils/intpoint.h:218:38: error: use of undeclared identifier 'LLONG_MIN'
+    : min(LLONG_MIN, LLONG_MIN), max(LLONG_MIN, LLONG_MIN)
+                                     ^
+./utils/intpoint.h:222:11: error: use of undeclared identifier 'LLONG_MIN'
+    : min(LLONG_MIN, LLONG_MIN), max(LLONG_MIN, LLONG_MIN)
+          ^
+./utils/intpoint.h:222:38: error: use of undeclared identifier 'LLONG_MIN'
+    : min(LLONG_MIN, LLONG_MIN), max(LLONG_MIN, LLONG_MIN)
+                                     ^
+./utils/intpoint.h:229:21: error: use of undeclared identifier 'LLONG_MAX'
+        min = Point(LLONG_MAX, LLONG_MAX);
+                    ^
+./utils/intpoint.h:230:21: error: use of undeclared identifier 'LLONG_MIN'
+        max = Point(LLONG_MIN, LLONG_MIN);
+
+# -v (verbose) option give some more infos about includes
+# Apparently emscrimpten/system/libc IS included correctly
+#forcing following defines in limits.h
+#define LLONG_MAX (9223372036854775807LL)
+#define LLONG_MIN (-LLONG_MAX-1)
+#RESOLVES the issue
+
+#NEXT
+./infill.h:37:28: error: variable length array of non-POD element type 'vector<int64_t>'
+    vector<int64_t> cutList[lineCount];
+#modified and works !!
+emcc main.cpp modelFile/modelFile.cpp clipper/clipper.cpp -I. -lstdc++ -v -o Cura_SteamEngine.js
+
+#NEXT: testing
+node Cura_SteamEngine.js -v -o "oohYeah.gcode" ./testcase_models/woltBaseline.stl
+#ERROR:
+Failed to load model: ./testcase_models/woltBaseline.stl
+
+#generated code is hard to debug: 
+#perhaps this can help
+https://github.com/kripken/emscripten/wiki/Debugging
+-g options (-g2 /-g3) to keep variable and function names
+-O2 for optimization level 2 
+
+#path resolution is the issue it seems
+FS.analyzePath will return bad values even for manually entered data
+
+#usefull : use Pointer_stringify(var) to convert a pointer to string
+
+#DOH !! it turns out, even under node.js , emscrimpten does not support access to the real file system ; it uses a virutal file system :
+https://github.com/kripken/emscripten/issues/1120
+http://stackoverflow.com/questions/16312674/how-do-i-pass-a-filename-to-an-emscripten-compiled-node-script-on-the-command-li
+https://github.com/kripken/emscripten/wiki/Tutorial
+
+for now, files to use have to be embeded so this works:
+emcc main.cpp modelFile/modelFile.cpp clipper/clipper.cpp -I. -g4 -O2 --embed-file woltBaseline.stl -v -o Cura_SteamEngine.js
+
+#MEMORY USE:
+https://github.com/kripken/emscripten/issues/1212
+http://comments.gmane.org/gmane.comp.compilers.emscripten/305
+Assertion: Cannot enlarge memory arrays. Either (1) compile with -s TOTAL_MEMORY=X with X higher than the current value, (2) compile with ALLOW_MEMORY_GROWTH which adjusts the size at runtime but prevents some optimizations, or (3) set Module.TOTAL_MEMORY before the program runs.
+
+#ouch slow, memory peak at 850 mb
+#after various attempts at increasing memory capability , still failing
+emcc main.cpp modelFile/modelFile.cpp clipper/clipper.cpp -I. -g1 -s TOTAL_MEMORY=536870912 -s ASM_JS=1 -O2 --embed-file woltBaseline.stl -v -o Cura_SteamEngine.js
+
+#Switching to simpler model (a cube) , also tried embeding output gcode file (an empty one)
+emcc main.cpp modelFile/modelFile.cpp clipper/clipper.cpp -I. -g1 -s ASM_JS=0 -s ALLOW_MEMORY_GROWTH=1 -O2 --embed-file cube.stl -v -o Cura_SteamEngine.js
+
+
