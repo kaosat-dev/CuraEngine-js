@@ -1,0 +1,3 @@
+[submodule "src/CuraEngine"]
+	path = src/CuraEngine
+	url = https://github.com/Ultimaker/CuraEngine.git
