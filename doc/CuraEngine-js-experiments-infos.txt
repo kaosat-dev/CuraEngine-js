@@ -86,5 +86,8 @@ emcc main.cpp modelFile/modelFile.cpp clipper/clipper.cpp -I. -g1 -s ASM_JS=0 -s
 #hmm on restarting without detailed debug, it peaks "only" at 750 mb
 Also, crashes are consistent:
 QSorting boundary 1258048329 out of 4294967295
-QSorting boundary 1258048329 out of 4294967295
+(seriously , four bilion ??)
+
+#Also tried to run node with :
+node --max-old-space-size=8192 --max-stack-size=8192 --max-new-space-size=1024 Cura_SteamEngine.js -v -o "toto.gcode" woltBaseline.stl
 

@@ -254,6 +254,8 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
     for(unsigned int layerNr=0; layerNr<totalLayers; layerNr++)
     {
         logProgress("export", layerNr+1, totalLayers);
+
+	log("Handling layer %u out of %u \n", layerNr+1, totalLayers);
         
         GCodePlanner gcodeLayer(gcode, config.moveSpeed);
         gcode.addComment("LAYER:%d", layerNr);
@@ -265,7 +267,7 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
         //log("Mark1 in %5.3fs\n", timeElapsed(t));
         for(unsigned int volumeCnt = 0; volumeCnt < storage.volumes.size(); volumeCnt++)
         {
-	    //log("Going through volume \n");
+	    log("  Going through volume %u out of %u \n", volumeCnt+1, storage.volumes.size());
             if (volumeCnt > 0)
                 volumeIdx = (volumeIdx + 1) % storage.volumes.size();
             SliceLayer* layer = &storage.volumes[volumeIdx].layers[layerNr];
@@ -280,6 +282,7 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
             
             for(unsigned int partCounter=0; partCounter<partOrderOptimizer.polyOrder.size(); partCounter++)
             {
+		log("   Going through part %u out of %u \n", partCounter+1, partOrderOptimizer.polyOrder.size());
                 SliceLayerPart* part = &layer->parts[partOrderOptimizer.polyOrder[partCounter]];
                 
                 gcodeLayer.setCombBoundary(&part->combBoundery);
@@ -300,7 +303,6 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
                 if (layerNr & 1) fillAngle += 90;
                 //int sparseSteps[1] = {config.extrusionWidth};
                 //generateConcentricInfill(part->skinOutline, fillPolygons, sparseSteps, 1);
-		log("Mark1-1: before infillLineGen\n");
                 generateLineInfill(part->skinOutline, fillPolygons, config.extrusionWidth, config.extrusionWidth, config.infillOverlap, (part->bridgeAngle > -1) ? part->bridgeAngle : fillAngle);
                 //int sparseSteps[2] = {config.extrusionWidth*5, config.extrusionWidth * 0.8};
                 //generateConcentricInfill(part->sparseOutline, fillPolygons, sparseSteps, 2);
@@ -485,7 +487,7 @@ int main(int argc, char **argv)
     config.filamentDiameter = 2890;
     config.filamentFlow = 100;
     config.initialLayerThickness = 300;
-    config.layerThickness = 500;
+    config.layerThickness = 100;//100
     config.extrusionWidth = 400;
     config.insetCount = 2;
     config.downSkinCount = 6;
@@ -499,7 +501,7 @@ int main(int argc, char **argv)
     config.skirtDistance = 6000;
     config.skirtLineCount = 1;
     config.sparseInfillLineDistance = 100 * config.extrusionWidth / 20;
-    config.infillOverlap = 15;
+    config.infillOverlap = 15;//15
     config.objectPosition = Point(102500, 102500);
     config.objectSink = 0;
     config.supportAngle = -1;

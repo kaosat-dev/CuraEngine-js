@@ -36,19 +36,27 @@ void generateLineInfill(Polygons outline, Polygons& result, int extrusionWidth, 
     
     int lineCount = (boundary.max.X - boundary.min.X + (lineSpacing - 1)) / lineSpacing;
     //vector<int64_t> cutList[lineCount];
-    vector< int64_t> *cutList = new vector<int64_t>[lineCount];
-//vector< vector<int64_t> > cutList;
+    //vector< int64_t> *cutList = new vector<int64_t>[lineCount];
+vector< vector<int64_t> > cutList;
+cutList.reserve(lineCount);
+   //vector< vector<int64_t> > cutList ;
+    //vector<int64_t> cutList[lineCount];
+    //vector<int64_t> cutList[lineCount];
+//std::vector<int64_t> cutList(lineCount);
+    //vector<int64_t> *cutList = new vector<int64_t>[lineCount];
+	//int64_t *cutList = new int64_t[lineCount];
 //cutList.reserve(lineCount);
     //TODO: fix this correctly
 
     for(unsigned int polyNr=0; polyNr < outline.size(); polyNr++)
     {
-	log("Handling poly %u for infill...\n", polyNr);
+	log("    Handling poly %u out of %u \n", polyNr+1, outline.size());
         Point p1 = outline[polyNr][outline[polyNr].size()-1];
         for(unsigned int i=0; i < outline[polyNr].size(); i++)
         {
-		log("Handling outline %u out of %u \n", i,outline[polyNr].size());
+		log("     Handling poly outline %u out of %u \n", i+1,outline[polyNr].size());
             Point p0 = outline[polyNr][i];
+		log("     DONE Handling\n");
             int idx0 = (p0.X - boundary.min.X) / lineSpacing;
             int idx1 = (p1.X - boundary.min.X) / lineSpacing;
             int64_t xMin = p0.X, xMax = p1.X;
@@ -65,21 +73,28 @@ void generateLineInfill(Polygons outline, Polygons& result, int extrusionWidth, 
             p1 = p0;
         }
     }
-    
+    log("    Done with pre treating polys\n");
     int idx = 0;
     for(int64_t x = boundary.min.X + lineSpacing / 2; x < boundary.max.X; x += lineSpacing)
     {
+	log("     QSorting boundary %u out of %u \n", x,boundary.max.X);
         qsort(cutList[idx].data(), cutList[idx].size(), sizeof(int64_t), compare_int64_t);
+	log("     QSorting boundary done \n");
+	log("     Cutlist size for current index %u \n", cutList[idx].size());
+	
         for(unsigned int i = 0; i + 1 < cutList[idx].size(); i+=2)
         {
             //if (cutList[idx][i+1] - cutList[idx][i] < extrusionWidth / 2) continue;
+	    //log("     Generating result  %u out of %u \n", i+1,cutList[idx].size());
             ClipperLib::Polygon p;
             p.push_back(matrix.unapply(Point(x, cutList[idx][i])));
             p.push_back(matrix.unapply(Point(x, cutList[idx][i+1])));
             result.push_back(p);
         }
         idx += 1;
+        log("     index  %u done\n", idx);
     }
+    log("    Done with infill\n");
 }
 
 #endif//INFILL_H
