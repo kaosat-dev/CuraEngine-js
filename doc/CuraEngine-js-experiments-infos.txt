@@ -90,4 +90,25 @@ QSorting boundary 1258048329 out of 4294967295
 
 #Also tried to run node with :
 node --max-old-space-size=8192 --max-stack-size=8192 --max-new-space-size=1024 Cura_SteamEngine.js -v -o "toto.gcode" woltBaseline.stl
+node --max-old-space-size=8192 --max-stack-size=8192 --max-new-space-size=1024 Cura_SteamEngine.js -v -o "toto.gcode" cube.stl
+
+
+Might be related to min/max values of llong_max / min
+as the code in js version goes to places (based on value compare in infill) that it SHOULD NOT go into
+argh
+
+#July 04 2013
+turns out, the polygons passed to the infill generator are wrong (different size than in the G++ version ..)
+down the rabbit hole we go
+traced down further to the "optimize" method of the path optimizer 
+DANG ! it seems , even the optimizer is behaving coherently (even if the float values of distances are off , coherence remains:)
+CPP : dist 
+20685983744.000000, best dist: 
+18446744073709551616.000000 
+
+dist 
+20685983401.000000, best dist: 
+18446744073709551616.000000 
+
+BUT it would seems the error comes from event further than that : the first layer's first part's outline has points, when it should not
 

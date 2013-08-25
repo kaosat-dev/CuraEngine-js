@@ -14,6 +14,9 @@ using ClipperLib::Polygons;
 #include <limits.h>
 #include <stdint.h>
 #include <math.h>
+#include <limits>
+#include <cstddef>
+#include <iostream>
 
 class Point3
 {
@@ -215,19 +218,19 @@ public:
     Point min, max;
     
     AABB()
-    : min(LLONG_MIN, LLONG_MIN), max(LLONG_MIN, LLONG_MIN)
+    : min(std::numeric_limits<long long>::min(), std::numeric_limits<long long>::min()), max(std::numeric_limits<long long>::min(), std::numeric_limits<long long>::min())
     {
     }
     AABB(Polygons polys)
-    : min(LLONG_MIN, LLONG_MIN), max(LLONG_MIN, LLONG_MIN)
+    : min(std::numeric_limits<long long>::min(), std::numeric_limits<long long>::min()), max(std::numeric_limits<long long>::min(), std::numeric_limits<long long>::min())
     {
         calculate(polys);
     }
     
     void calculate(Polygons polys)
     {
-        min = Point(LLONG_MAX, LLONG_MAX);
-        max = Point(LLONG_MIN, LLONG_MIN);
+        min = Point(std::numeric_limits<long long>::max(), std::numeric_limits<long long>::max());
+        max = Point(std::numeric_limits<long long>::min(), std::numeric_limits<long long>::min());
         for(unsigned int i=0; i<polys.size(); i++)
         {
             for(unsigned int j=0; j<polys[i].size(); j++)

@@ -262,8 +262,8 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
         int32_t z = config.initialLayerThickness + layerNr * config.layerThickness;
         z += config.raftBaseThickness + config.raftInterfaceThickness;
         gcode.setZ(z);
-        if (layerNr == 0)
-            gcodeLayer.addPolygonsByOptimizer(storage.skirt, &skirtConfig);
+        //if (layerNr == 0)
+        //    gcodeLayer.addPolygonsByOptimizer(storage.skirt, &skirtConfig);
         //log("Mark1 in %5.3fs\n", timeElapsed(t));
         for(unsigned int volumeCnt = 0; volumeCnt < storage.volumes.size(); volumeCnt++)
         {
@@ -278,14 +278,37 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
             {
                 partOrderOptimizer.addPolygon(layer->parts[partNr].insets[0][0]);
             }
+		log("partOrderOptimizer polygons %u \n", partOrderOptimizer.polygons.size());
+		log("partOrderOptimizer polyorder %u \n", partOrderOptimizer.polyOrder.size());
             partOrderOptimizer.optimize();
+		log("POST OPTIM partOrderOptimizer polygons %u \n", partOrderOptimizer.polygons.size());
+		log("POST OPTIM partOrderOptimizer polyorder %u \n", partOrderOptimizer.polyOrder.size());
+		//log("POST OPTIM polyorder at 0 %u \n", partOrderOptimizer.polyOrder[0]);
+	   log("toto\n");
             
             for(unsigned int partCounter=0; partCounter<partOrderOptimizer.polyOrder.size(); partCounter++)
             {
-		log("   Going through part %u out of %u \n", partCounter+1, partOrderOptimizer.polyOrder.size());
+		//log("   Going through part %u out of %u \n", partCounter+1, partOrderOptimizer.polyOrder.size());
                 SliceLayerPart* part = &layer->parts[partOrderOptimizer.polyOrder[partCounter]];
-                
-                gcodeLayer.setCombBoundary(&part->combBoundery);
+                log("order index %u \n", partOrderOptimizer.polyOrder[partCounter]);
+    
+		try
+		  {
+		   if(part->skinOutline.size()>0)
+			{
+				if(part->skinOutline[0].size()>0)
+		{
+		    	Point p0 = (part->skinOutline)[0][0];
+                	log("bla %f pof\n",p0.X);
+}
+			}
+		  }
+		  catch (int e)
+		  {
+		    log("An exception occurred. Exception Nr.%i \n",e);
+		  }
+		 
+                /*gcodeLayer.setCombBoundary(&part->combBoundery);
                 gcodeLayer.forceRetract();
                 if (config.insetCount > 0)
                 {
@@ -296,13 +319,14 @@ log("Added general info to gcode in %5.3fs\n", timeElapsed(t));
                         else
                             gcodeLayer.addPolygonsByOptimizer(part->insets[insetNr], &inset1Config);
                     }
-                }
+                }*/
                 
                 Polygons fillPolygons;
                 int fillAngle = 45;
                 if (layerNr & 1) fillAngle += 90;
                 //int sparseSteps[1] = {config.extrusionWidth};
                 //generateConcentricInfill(part->skinOutline, fillPolygons, sparseSteps, 1);
+		log("Passing skinOutline of size %u to generator\n", (part->skinOutline).size()); 
                 generateLineInfill(part->skinOutline, fillPolygons, config.extrusionWidth, config.extrusionWidth, config.infillOverlap, (part->bridgeAngle > -1) ? part->bridgeAngle : fillAngle);
                 //int sparseSteps[2] = {config.extrusionWidth*5, config.extrusionWidth * 0.8};
                 //generateConcentricInfill(part->sparseOutline, fillPolygons, sparseSteps, 2);

@@ -3,6 +3,8 @@
 #define PATHOPTIMIZER_H
 
 #include <stdint.h>
+#include "utils/logoutput.h"
+#include "utils/gettime.h"
 
 float distanceSquared(const Point& p0, const Point& p1)
 {
@@ -37,7 +39,10 @@ public:
     
     void optimize()
     {
+	log("Optimizing  \n");
         std::vector<bool> picked;
+	log("Polys %u \n",polygons.size());
+        
         for(unsigned int i=0;i<polygons.size(); i++)
         {
             int best = -1;
@@ -52,8 +57,10 @@ public:
                     bestDist = dist;
                 }
             }
+		
             polyStart.push_back(best);
             picked.push_back(false);
+		log("best %d \n",best);
         }
 
         Point p0 = startPoint;
@@ -67,6 +74,7 @@ public:
                     continue;
                 if ((*polygons[i]).size() == 2)
                 {
+			log("polys >2\n");
                     float dist = distanceSquared((*polygons[i])[0], p0);
                     if (dist < bestDist)
                     {
@@ -83,6 +91,7 @@ public:
                     }
                 }else{
                     float dist = distanceSquared((*polygons[i])[polyStart[i]], p0);
+		log("dist %f, best dist: %f \n",dist, bestDist);
                     if (dist < bestDist)
                     {
                         best = i;
@@ -101,8 +110,10 @@ public:
                 picked[best] = true;
                 polyOrder.push_back(best);
             }
+	log("second best %d \n", best);
         }
-        
+	
+        log("PolyOrder size: %u \n", polyOrder.size());
         p0 = startPoint;
         for(unsigned int n=0; n<polyOrder.size(); n++)
         {
@@ -112,6 +123,7 @@ public:
             for(unsigned int i=0;i<polygons[nr]->size(); i++)
             {
                 float dist = distanceSquared((*polygons[nr])[i], p0);
+		log("dist %f, best dist: %f \n",dist, bestDist);
                 if (dist < bestDist)
                 {
                     best = i;

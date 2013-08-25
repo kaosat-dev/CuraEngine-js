@@ -54,8 +54,8 @@ private:
     {
         for(unsigned int n=0; n<boundery.size(); n++)
         {
-            minX[n] = LLONG_MAX;
-            maxX[n] = LLONG_MIN;
+            minX[n] = std::numeric_limits<long long>::max();
+            maxX[n] = std::numeric_limits<long long>::min();
             Point p0 = matrix.apply(boundery[n][boundery[n].size()-1]);
             for(unsigned int i=0; i<boundery[n].size(); i++)
             {
@@ -77,7 +77,7 @@ private:
     
     unsigned int getPolygonAbove(int64_t x)
     {
-        int64_t min = LLONG_MAX;
+        int64_t min = std::numeric_limits<long long>::max();
         unsigned int ret = UINT_MAX;
         for(unsigned int n=0; n<boundery.size(); n++)
         {
